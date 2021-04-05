@@ -6,18 +6,25 @@ class DocumentHelpers {
     constructor(document) {
         this.document = document;
     }
-
+    recursiveMerge(obj1, obj2) {
+        const objA = {...obj1 };
+        const objB = {...obj2 };
+        Object.entries(objB).forEach(([key, value]) => {
+            if (typeof value === "object" && typeof objA[key] === "object") {
+                objA[key] = recursiveMerge(objA[key], value);
+            } else {
+                objA[key] = value;
+            }
+        })
+        return objA;
+    }
     getElementById(id) {
         return this.document.getElementById(id);
     }
     createElement(tag, props) {
         let node = this.document.createElement(tag);
-        /*
-        this could be better if it did deep merge instead of shallow merge
-        I think I need to do a recursive function that checks object entries until the key value pair
-        refers to a primitive and then do manual assignation instead of spreading
-        */
-        node = {...node, ...props };
+        console.log(this.recursiveMerge(node, props));
+        return this.recursiveMerge(node, props);
     }
 }
 
