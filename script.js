@@ -1,8 +1,33 @@
-class Board {
-    node = document.getElementById("main");
+/*
+I've created this class because I wanted to have my own api over the document object
+JS can get very verbose when handling the dom and I don't want to use JQuery for this project.
+*/
+class DocumentHelpers {
+    constructor(document) {
+        this.document = document;
+    }
 
-    constructor(snake) {
+    getElementById(id) {
+        return this.document.getElementById(id);
+    }
+    createElement(tag, props) {
+        let node = this.document.createElement(tag);
+        /*
+        this could be better if it did deep merge instead of shallow merge
+        I think I need to do a recursive function that checks object entries until the key value pair
+        refers to a primitive and then do manual assignation instead of spreading
+        */
+        node = {...node, ...props };
+    }
+}
+
+/*
+this is the screen where everything gets drawn, like a canvas
+*/
+class Board {
+    constructor(snake, documentHelpers) {
         this.snake = snake;
+        this.node = documentHelpers.getElementById("main");
     }
 
     update() {
@@ -14,6 +39,11 @@ class Board {
     }
 }
 
+/*
+this is the snake class, where It's behaviour is defined 
+for now it only moves but it cannot die eating itself nor touching the walls
+also It cannot grow, I'll handle that once the fruit class is done
+*/
 class Snake {
     body = [
         { x: 10, y: 10 },
@@ -25,6 +55,10 @@ class Snake {
     ];
     head = this.body[0];
     direction = { x: 0, y: 0 };
+
+    constructor(documentHelpers) {
+        this.documentHelpers = documentHelpers;
+    }
 
     setDirection(x, y) {
         this.direction = { x, y };
@@ -43,16 +77,23 @@ class Snake {
         }
     }
     renderBodyParts() {
-        return this.body.map(({ x, y }) => {
-            const snakePart = document.createElement("div");
-            snakePart.classList = "snake";
-            snakePart.style.gridRowStart = y;
-            snakePart.style.gridColumnStart = x;
-            return snakePart;
-        });
+        return this.body.map(({ x, y }) =>
+            this.documentHelpers.createElement("div", {
+                classList: "snake",
+                style: {
+                    gridRowStart: y,
+                    gridColumnStart: x,
+                },
+            })
+        );
     }
 }
 
+
+/*
+this "input handler" takes keyboard key configurations and the snake as arguments
+then it can check with those keycodes which key is pressed and change the snake direction accordingly
+*/
 class InputHandler {
     constructor(window, { up, left, right, down }, snake) {
         this.keys = { up, left, right, down };
@@ -87,8 +128,9 @@ class InputHandler {
 const currentTimestamp = () => new Date().getTime();
 let previousTimestamp = currentTimestamp();
 const FRAME_INTERVAL = 0.5;
-const snake = new Snake();
-const board = new Board(snake);
+const documentHelpers = new DocumentHelpers(document);
+const snake = new Snake(documentHelpers);
+const board = new Board(snake, documentHelpers);
 const inputHandler = new InputHandler(
     window, {
         up: "ArrowUp",
@@ -100,6 +142,10 @@ const inputHandler = new InputHandler(
 );
 inputHandler.init();
 
+/*
+this loop runs at an unknown rate, that's why I "throttle" the board renders manually
+checking the system clock for an interval in seconds to be present between the last render and the current one
+*/
 function gameLoop() {
     window.requestAnimationFrame(gameLoop);
     const now = currentTimestamp();
