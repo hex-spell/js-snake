@@ -103,7 +103,7 @@ inputHandler.init();
 function gameLoop() {
     window.requestAnimationFrame(gameLoop);
     const now = currentTimestamp();
-    if ((now - previousTimestamp) / 1000 > FRAME_DELAY) {
+    if ((now - previousTimestamp) / 1000 > FRAME_INTERVAL) {
         previousTimestamp = now;
         board.update();
         board.render();
