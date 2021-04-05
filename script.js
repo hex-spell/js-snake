@@ -86,7 +86,7 @@ class InputHandler {
 
 const currentTimestamp = () => new Date().getTime();
 let previousTimestamp = currentTimestamp();
-const FRAME_DELAY = 0.5;
+const FRAME_INTERVAL = 0.5;
 const snake = new Snake();
 const board = new Board(snake);
 const inputHandler = new InputHandler(
