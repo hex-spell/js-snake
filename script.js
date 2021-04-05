@@ -1,8 +1,10 @@
 class Board {
+    node = document.getElementById("main");
+
     constructor(snake) {
-        this.node = document.getElementById("main");
         this.snake = snake;
     }
+
     update() {
         this.snake.update();
     }
@@ -13,18 +15,17 @@ class Board {
 }
 
 class Snake {
-    constructor() {
-        this.body = [
-            { x: 10, y: 10 },
-            { x: 10, y: 11 },
-            { x: 10, y: 12 },
-            { x: 10, y: 13 },
-            { x: 10, y: 14 },
-            { x: 10, y: 15 },
-        ];
-        this.head = this.body[0];
-        this.direction = { x: 0, y: 0 };
-    }
+    body = [
+        { x: 10, y: 10 },
+        { x: 10, y: 11 },
+        { x: 10, y: 12 },
+        { x: 10, y: 13 },
+        { x: 10, y: 14 },
+        { x: 10, y: 15 },
+    ];
+    head = this.body[0];
+    direction = { x: 0, y: 0 };
+
     setDirection(x, y) {
         this.direction = { x, y };
     }
@@ -56,9 +57,9 @@ class InputHandler {
     constructor(window, { up, left, right, down }, snake) {
         this.keys = { up, left, right, down };
         this.snake = snake;
-        this.eventListener = undefined;
         this.window = window;
     }
+
     init() {
         this.eventListener = this.window.addEventListener("keydown", (event) => {
             const { x, y } = this.snake.getDirection();
