@@ -19,6 +19,8 @@
       #table {
         width: 70vh;
         height: 70vh;
+        max-width: 70vw;
+        max-height: 70vw;
         background-color: black;
         display: grid;
         grid-template-columns: repeat(10, 1fr);
@@ -77,8 +79,9 @@
   </head>
   <body>
     <h1>Just Another Snake Game</h1>
+    <p>(Use WASD keys to move)</p>
     <div id="stats">
-      <h2 id="points">Points: 0</h2>
+      <h3 id="points">Points: 0</h3>
     </div>
     <div id="table"></div>
     <div id="gameOver" class="hidden">
