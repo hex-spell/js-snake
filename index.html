@@ -1,18 +1,303 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JASG - Just Another Snake Game</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+      #table {
+        width: 70vh;
+        height: 70vh;
+        background-color: black;
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        grid-template-rows: repeat(10, 1fr);
+      }
+      #gameOver {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .backdrop {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        opacity: 0.8;
+        z-index: 9;
+      }
+      .gameOverCard {
+        background-color: white;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        z-index: 10;
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .actionButtons {
+        display: flex;
+        justify-content: flex-end;
+      }
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Just Another Snake Game</h1>
+    <div id="stats">
+      <h2 id="points">Points: 0</h2>
+    </div>
+    <div id="table"></div>
+    <div id="gameOver" class="hidden">
+      <div class="backdrop"></div>
+      <div class="gameOverCard">
+        <h1>Game Over</h1>
+        <div class="actionButtons">
+          <button onclick="startGame()">Try again</button>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    const table = document.getElementById("table");
+    const squares = [];
+    for (let i = 0; i < 10; i++) {
+      let row = [];
+      for (let y = 0; y < 10; y++) {
+        const square = document.createElement("div");
+        square.setAttribute("id", `square#${i}#${y}`);
+        //square.style.border = "1px solid white";
+        table.append(square);
+        row.push(square);
+      }
+      squares.push(row);
+    }
 
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="script.js" defer></script>
-</head>
+    const deepCopy = (arr) => {
+      let copy = [];
+      arr.forEach((elem) => {
+        if (Array.isArray(elem)) {
+          copy.push(deepCopy(elem));
+        } else {
+          if (typeof elem === "object") {
+            copy.push(deepCopyObject(elem));
+          } else {
+            copy.push(elem);
+          }
+        }
+      });
+      return copy;
+    };
 
-<body>
-    <div id="main"></div>
+    const cleanSquares = (squares) => {
+      squares.forEach((row) => {
+        row.forEach((square) => (square.style.backgroundColor = "black"));
+      });
+    };
 
-</body>
+    const renderSnake = (snake, squares) => {
+      snake.forEach(
+        ([x, y]) => (squares[x][y].style.backgroundColor = "green")
+      );
+    };
 
+    const renderApple = (appleCoordinates, squares) => {
+      squares[appleCoordinates[0]][appleCoordinates[1]].style.backgroundColor =
+        "red";
+    };
+
+    const renderPoints = (points) => {
+      const pointsHeader = document.getElementById("points");
+      pointsHeader.innerHTML = `Points: ${points}`;
+    };
+
+    const getCoordinateInReach = (coord) => {
+      if (coord < 0) return 9;
+      else if (coord > 9) return 0;
+      else return coord;
+    };
+
+    const checkIfDead = (snakeCoordinates, newNode) =>
+      snakeCoordinates.some(
+        (el) => JSON.stringify(el) === JSON.stringify(newNode)
+      );
+
+    const appleIsEaten = (newNode, appleCoordinates) =>
+      JSON.stringify(newNode) === JSON.stringify(appleCoordinates);
+
+    const getRandomArbitrary = (min, max) => {
+      return Math.floor(Math.random() * (max - min) + min);
+    };
+
+    const getRandCoord = () => [
+      getRandomArbitrary(0, 9),
+      getRandomArbitrary(0, 9),
+    ];
+
+    const getRandCoordWithoutSnake = (snakeCoordinates) => {
+      let randCoord = null;
+      while (
+        randCoord === null ||
+        snakeCoordinates.some(
+          (el) => JSON.stringify(el) === JSON.stringify(randCoord)
+        )
+      ) {
+        randCoord = getRandCoord();
+      }
+      return randCoord;
+    };
+
+    const runCycle = (
+      _snakeCoordinates,
+      direction,
+      _appleCoordinates,
+      _points
+    ) => {
+      let alive = true;
+      let snakeCoordinates = deepCopy(_snakeCoordinates);
+      let appleCoordinates = [..._appleCoordinates];
+      let points = _points;
+      let newNode;
+      switch (direction) {
+        case "w": {
+          newNode = [
+            getCoordinateInReach(snakeCoordinates[0][0] - 1),
+            snakeCoordinates[0][1],
+          ];
+          break;
+        }
+        case "a": {
+          newNode = [
+            snakeCoordinates[0][0],
+            getCoordinateInReach(snakeCoordinates[0][1] - 1),
+          ];
+          break;
+        }
+        case "s": {
+          newNode = [
+            getCoordinateInReach(snakeCoordinates[0][0] + 1),
+            snakeCoordinates[0][1],
+          ];
+          break;
+        }
+        case "d": {
+          newNode = [
+            snakeCoordinates[0][0],
+            getCoordinateInReach(snakeCoordinates[0][1] + 1),
+          ];
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+
+      if (checkIfDead(snakeCoordinates, newNode)) alive = false;
+
+      snakeCoordinates.unshift(newNode);
+
+      if (appleIsEaten(newNode, appleCoordinates)) {
+        points++;
+        appleCoordinates = getRandCoordWithoutSnake(snakeCoordinates);
+      }
+
+      if (points + 2 < snakeCoordinates.length) snakeCoordinates.pop();
+
+      return {
+        alive,
+        points,
+        snakeCoordinates,
+        appleCoordinates,
+      };
+    };
+
+    const opposites = {
+      w: "s",
+      a: "d",
+      d: "a",
+      s: "w",
+    };
+
+    const validKeys = Object.keys(opposites);
+
+    const showGameOverSign = (show) => {
+      const gameOverSign = document.getElementById("gameOver");
+      if (show) gameOverSign.classList.remove("hidden");
+      else gameOverSign.classList.add("hidden");
+    };
+
+    const startGame = () => {
+      showGameOverSign(false);
+
+      let snakeCoordinates = [
+        [0, 1],
+        [0, 0],
+      ];
+
+      let points = 0;
+
+      let direction = "d";
+
+      let askedDirection = "d";
+
+      let appleCoordinates = getRandCoordWithoutSnake(snakeCoordinates);
+
+      renderSnake(snakeCoordinates, squares);
+
+      const loop = setInterval(() => {
+        cleanSquares(squares);
+        console.log(appleCoordinates);
+        renderApple(appleCoordinates, squares);
+        renderPoints(points);
+        if (
+          askedDirection !== opposites[direction] &&
+          validKeys.includes(askedDirection)
+        ) {
+          direction = askedDirection;
+        }
+
+        const cycle = runCycle(
+          snakeCoordinates,
+          direction,
+          appleCoordinates,
+          points
+        );
+
+        snakeCoordinates = cycle.snakeCoordinates;
+
+        appleCoordinates = cycle.appleCoordinates;
+
+        points = cycle.points;
+
+        if (!cycle.alive) {
+          clearInterval(loop);
+          showGameOverSign(true);
+        }
+        renderSnake(snakeCoordinates, squares);
+      }, 200);
+
+      document.addEventListener("keypress", (e) => {
+        askedDirection = e.key;
+        if (e.key === "p") {
+          points++;
+        }
+      });
+    };
+
+    startGame();
+  </script>
 </html>
