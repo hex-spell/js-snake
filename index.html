@@ -6,11 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>JASG - Just Another Snake Game</title>
     <style>
+      @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
       body {
         display: flex;
         justify-content: center;
         align-items: center;
         flex-direction: column;
+        font-family: "Press Start 2P";
+        color: white;
+        background-color: darkblue;
       }
       #table {
         width: 70vh;
@@ -19,6 +23,7 @@
         display: grid;
         grid-template-columns: repeat(10, 1fr);
         grid-template-rows: repeat(10, 1fr);
+        border: 5px dashed white;
       }
       #gameOver {
         position: fixed;
@@ -29,6 +34,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        color: black;
       }
       .backdrop {
         position: absolute;
@@ -39,12 +45,13 @@
         z-index: 9;
       }
       .gameOverCard {
-        background-color: white;
+        background-color: darkblue;
+        color: white;
         display: flex;
         justify-content: center;
         flex-direction: column;
+        border: 5px dashed white;
         z-index: 10;
-        border-radius: 12px;
         padding: 12px;
       }
       .actionButtons {
@@ -53,6 +60,18 @@
       }
       .hidden {
         display: none !important;
+      }
+      .button {
+        border-radius: none;
+        border: 5px dotted black;
+        color: white;
+        background-color: darkgreen;
+        font-family: "Press Start 2P";
+        padding: 10px;
+        cursor: pointer;
+      }
+      .button:hover {
+        border: 5px dotted white;
       }
     </style>
   </head>
@@ -67,7 +86,7 @@
       <div class="gameOverCard">
         <h1>Game Over</h1>
         <div class="actionButtons">
-          <button onclick="startGame()">Try again</button>
+          <button class="button" onclick="startGame()">Try again</button>
         </div>
       </div>
     </div>
