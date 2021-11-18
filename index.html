@@ -40,10 +40,14 @@
         left: 30px;
         bottom: 15px;
       }
-      .score {
+      .scoreHeader,
+      .scoreRow {
         display: flex;
         justify-content: space-between;
         padding: 15px;
+      }
+      .scoreHeader,
+      .scoreRow:not(:last-child) {
         border-bottom: 2px dashed white;
       }
       .scorePoints {
@@ -101,9 +105,27 @@
         font-family: "Press Start 2P";
         padding: 10px;
         cursor: pointer;
+        margin-left: 15px;
+        transition: background-color 400ms linear;
+      }
+      .disabled {
+        background-color: grey;
       }
       .button:hover {
         border: 5px dotted white;
+      }
+      .userInput {
+        padding: 10px;
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        background-color: black;
+        color: white;
+        font-family: "Press Start 2P";
+      }
+      @media (max-width: 1230px) {
+        #scoresTable {
+          display: none;
+        }
       }
     </style>
   </head>
@@ -115,20 +137,61 @@
     </div>
     <div id="scoresTable">
       <div class="tableHeader">Highscores.exe</div>
-      <div class="score"><div>Name</div><div>Points</div></div>
+      <div class="scoreHeader">
+        <div>Name</div>
+        <div>Points</div>
+      </div>
     </div>
     <div id="table"></div>
     <div id="gameOver" class="hidden">
       <div class="backdrop"></div>
       <div class="gameOverCard">
         <h1>Game Over</h1>
+        <input
+          name="username"
+          id="username"
+          class="userInput"
+          placeholder="Your name"
+        />
         <div class="actionButtons">
-          <button class="button" onclick="startGame()">Try again</button>
+          <button class="button" id="tryAgain" onclick="tryAgain()">
+            Save and try again
+          </button>
         </div>
       </div>
     </div>
   </body>
   <script>
+    function removeElementsByClass(className) {
+      const elements = document.getElementsByClassName(className);
+      while (elements.length > 0) {
+        elements[0].parentNode.removeChild(elements[0]);
+      }
+    }
+    function refreshScores() {
+      const scoresTable = document.getElementById("scoresTable");
+      fetch("http://modularizar.com/snake-backend")
+        .then((res) => res.json())
+        .then((jsonBody) => {
+          if (jsonBody.length) {
+            removeElementsByClass("scoreRow");
+            jsonBody.forEach((score) => {
+              const newScore = document.createElement("div");
+              newScore.classList.add("scoreRow");
+              const newScoreName = document.createElement("div");
+              newScoreName.classList.add("scoreName");
+              newScoreName.textContent = score.username;
+              const newScorePoints = document.createElement("div");
+              newScorePoints.classList.add("scorePoints");
+              newScorePoints.textContent = score.points;
+              newScore.append(newScoreName, newScorePoints);
+              scoresTable.append(newScore);
+            });
+          }
+        });
+    }
+    window.onload = () => refreshScores();
+
     const table = document.getElementById("table");
     const squares = [];
     for (let i = 0; i < 10; i++) {
@@ -290,11 +353,21 @@
 
     const validKeys = Object.keys(opposites);
 
+    const enterListener = (e) => {
+      if (e.keyCode === 13) {
+        tryAgain();
+      }
+    };
+
     const showGameOverSign = (show) => {
       const gameOverSign = document.getElementById("gameOver");
-      if (show) gameOverSign.classList.remove("hidden");
-      else gameOverSign.classList.add("hidden");
+      if (show) {
+        gameOverSign.classList.remove("hidden");
+        document.addEventListener("keypress", enterListener);
+      } else gameOverSign.classList.add("hidden");
     };
+
+    let points = 0;
 
     const startGame = () => {
       showGameOverSign(false);
@@ -304,7 +377,7 @@
         [0, 0],
       ];
 
-      let points = 0;
+      points = 0;
 
       let direction = "d";
 
@@ -353,29 +426,30 @@
       });
     };
 
-    startGame();
-  </script>
-  <script>
-    window.onload = () => {
-      const scoresTable = document.getElementById("scoresTable");
-      fetch("http://modularizar.com/snake-backend")
-        .then((res) => res.json())
-        .then((jsonBody) => {
-          if (jsonBody.length) {
-            jsonBody.forEach((score)=>{
-              const newScore = document.createElement("div");
-              newScore.classList.add("score");
-              const newScoreName = document.createElement("div");
-              newScoreName.classList.add("scoreName");
-              newScoreName.textContent = score.username;
-              const newScorePoints = document.createElement("div");
-              newScorePoints.classList.add("scorePoints");
-              newScorePoints.textContent = score.points;
-              newScore.append(newScoreName, newScorePoints);
-              scoresTable.append(newScore);
-            })
-          }
+    function tryAgain() {
+      document.removeEventListener("keypress", enterListener);
+      const tryAgainButton = document.getElementById("tryAgain");
+      tryAgainButton.classList.add("disabled");
+      const username = document.getElementById("username").value;
+      const restart = () => {
+        tryAgainButton.classList.remove("disabled");
+        startGame();
+      };
+      if (username) {
+        fetch("http://modularizar.com/snake-backend", {
+          method: "POST",
+          body: JSON.stringify({
+            username,
+            points,
+          }),
+        }).then(() => {
+          refreshScores();
+          restart();
         });
-    };
+      } else {
+        restart();
+      }
+    }
+    startGame();
   </script>
 </html>
