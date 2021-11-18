@@ -27,6 +27,36 @@
         grid-template-rows: repeat(10, 1fr);
         border: 5px dashed white;
       }
+      #scoresTable {
+        border: 5px dashed white;
+        background-color: black;
+        display: flex;
+        flex-direction: column;
+        max-height: 80vw;
+        height: 80vh;
+        width: 300px;
+        max-width: 30vw;
+        position: absolute;
+        left: 30px;
+        bottom: 15px;
+      }
+      .score {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px;
+        border-bottom: 2px dashed white;
+      }
+      .scorePoints {
+        padding-left: 15px;
+        text-align: center;
+      }
+      .tableHeader {
+        height: 35px;
+        background-color: blue;
+        padding: 8px;
+        padding-top: 15px;
+        color: white;
+      }
       #gameOver {
         position: fixed;
         top: 0;
@@ -82,6 +112,10 @@
     <p>(Use WASD keys to move)</p>
     <div id="stats">
       <h3 id="points">Points: 0</h3>
+    </div>
+    <div id="scoresTable">
+      <div class="tableHeader">Highscores.exe</div>
+      <div class="score"><div>Name</div><div>Points</div></div>
     </div>
     <div id="table"></div>
     <div id="gameOver" class="hidden">
@@ -320,5 +354,28 @@
     };
 
     startGame();
+  </script>
+  <script>
+    window.onload = () => {
+      const scoresTable = document.getElementById("scoresTable");
+      fetch("http://modularizar.com/snake-backend")
+        .then((res) => res.json())
+        .then((jsonBody) => {
+          if (jsonBody.length) {
+            jsonBody.forEach((score)=>{
+              const newScore = document.createElement("div");
+              newScore.classList.add("score");
+              const newScoreName = document.createElement("div");
+              newScoreName.classList.add("scoreName");
+              newScoreName.textContent = score.username;
+              const newScorePoints = document.createElement("div");
+              newScorePoints.classList.add("scorePoints");
+              newScorePoints.textContent = score.points;
+              newScore.append(newScoreName, newScorePoints);
+              scoresTable.append(newScore);
+            })
+          }
+        });
+    };
   </script>
 </html>
